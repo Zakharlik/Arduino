@@ -50,17 +50,17 @@ void setup()
 
 void loop()
 {
-  if (!digitalRead(BTN) && millis() - btn_t > 600) { //Turning pump on if button pressed long
+  if (!digitalRead(BTN) && millis() - btn_t > 1200) { //Button just pressed
+    btn_t = millis();
+  }
+  else if (!digitalRead(BTN) && millis() - btn_t > 600) { //Turning pump on if button pressed long
     turnPumpOn();
     btn_t = millis();
   }
-  else {
-    if (!digitalRead(BTN) && millis() - btn_t > 300) {  //Swich was_high status if button pressed short
-      was_high = !was_high;
-      digitalWrite(LED_WASH, was_high);
-      btn_t = millis();
-    }
-    
+  else if (!digitalRead(BTN) && millis() - btn_t > 300) {  //Swich was_high status if button pressed short
+    was_high = !was_high;
+    digitalWrite(LED_WASH, was_high);
+    btn_t = millis();
   }
   
   if (millis() - measure_time > MEASURE_PERIOD) { //Measure water level
