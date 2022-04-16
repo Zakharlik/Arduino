@@ -32,6 +32,7 @@ uint32_t btn_t = 5000;
 byte  k, i = 0;
 bool ledr = true;
 bool blink_flag = true;
+bool btn_flag = false;
 void setup()
 {
   pinMode(RELLAY_PIN, OUTPUT);
@@ -50,17 +51,23 @@ void setup()
 
 void loop()
 {
-  if (!digitalRead(BTN) && millis() - btn_t > 1200) { //Button just pressed
+  if (!digitalRead(BTN) && !btn_flag) { //Pressed
     btn_t = millis();
+    btn_flag = true;
   }
-  else if (!digitalRead(BTN) && millis() - btn_t > 600) { //Turning pump on if button pressed long
-    turnPumpOn();
-    btn_t = millis();
-  }
-  else if (!digitalRead(BTN) && millis() - btn_t > 300) {  //Swich was_high status if button pressed short
-    was_high = !was_high;
-    digitalWrite(LED_WASH, was_high);
-    btn_t = millis();
+  if (digitalRead(BTN) && btn_flag) { //Released
+    if (millis() - btn_t > 50 && millis() - btn_t < 300) { //Short press
+      was_high = !was_high;
+      digitalWrite(LED_WASH, was_high);
+      btn_flag = false;
+    }
+    else if (millis() - btn_t < 600) { //Long press
+      turnPumpOn();
+      btn_flag = false;
+    }
+    else if (millis() - btn_t >= 600) { //Verry long press
+      btn_flag = false;
+    }
   }
   
   if (millis() - measure_time > MEASURE_PERIOD) { //Measure water level
