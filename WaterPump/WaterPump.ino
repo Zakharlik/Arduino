@@ -18,7 +18,7 @@
 #define MAX_MOTOR_TIME 40 //Max motor working time in minutes
 #define MEASURE_PERIOD 2000   //Period betwin measures
 
-int max_motor_time = 40;
+uint32_t max_motor_time = 40;
 
 bool pump = false;
 bool was_high = false;
@@ -67,6 +67,7 @@ void loop()
     }
     else if (millis() - btn_t >= 600) { //Verry long press
       btn_flag = false;
+      pump = false;
     }
   }
   
