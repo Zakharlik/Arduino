@@ -1,5 +1,5 @@
 //Water Pump Controller
-//v 0.1
+//v 0.1.1
 //Controls water pump to fill in water barell by measureng voltage betwen wire on bottom and top of the barrel.
 //Writen by Zlong
 
@@ -26,7 +26,7 @@ int low_sensor, high_sensor;
 uint32_t motor_timer = 0;
 uint32_t measure_time = 0;
 uint32_t rl_t = 0;
-uint32_t btn_t = 5000;
+uint32_t btn_t = 5000; 
 
 
 byte  k, i = 0;
@@ -56,16 +56,16 @@ void loop()
     btn_flag = true;
   }
   if (digitalRead(BTN) && btn_flag) { //Released
-    if (millis() - btn_t > 50 && millis() - btn_t < 300) { //Short press
+    if (millis() - btn_t > 50 && millis() - btn_t < 1000) { //Short press
       was_high = !was_high;
       digitalWrite(LED_WASH, was_high);
       btn_flag = false;
     }
-    else if (millis() - btn_t < 600) { //Long press
+    else if ((millis() - btn_t) < 2000) { //Long press
       turnPumpOn();
       btn_flag = false;
     }
-    else if (millis() - btn_t >= 600) { //Verry long press
+    else if ((millis() - btn_t) >= 2000) { //Verry long press
       btn_flag = false;
       pump = false;
     }

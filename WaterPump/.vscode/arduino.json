@@ -1,0 +1,4 @@
+{
+    "sketch": "WaterPump.ino",
+    "board": "arduino:avr:uno"
+}
