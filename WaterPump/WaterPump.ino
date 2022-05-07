@@ -18,14 +18,14 @@
 #define MAX_MOTOR_TIME 40 //Max motor working time in minutes
 #define MEASURE_PERIOD 2000   //Period betwin measures
 
-uint32_t max_motor_time = 40;
+uint32_t max_motor_time = 40; //Inital maximum time 
 
-bool pump = false;
+bool is_pump_on = false;
 bool was_high = false;
 int low_sensor, high_sensor;
-uint32_t motor_timer = 0;
+uint32_t motor_timer = 0;     //Timer of pump
 uint32_t measure_time = 0;
-uint32_t rl_t = 0;
+uint32_t rl_t = 0;            //Timer for LED blink
 uint32_t btn_t = 5000; 
 
 
@@ -51,33 +51,17 @@ void setup()
 
 void loop()
 {
-  if (!digitalRead(BTN) && !btn_flag) { //Pressed
-    btn_t = millis();
-    btn_flag = true;
-  }
-  if (digitalRead(BTN) && btn_flag) { //Released
-    if (millis() - btn_t > 50 && millis() - btn_t < 1000) { //Short press
-      was_high = !was_high;
-      digitalWrite(LED_WASH, was_high);
-      btn_flag = false;
-    }
-    else if ((millis() - btn_t) < 2000) { //Long press
-      turnPumpOn();
-      btn_flag = false;
-    }
-    else if ((millis() - btn_t) >= 2000) { //Verry long press
-      btn_flag = false;
-      pump = false;
-    }
-  }
-  
+  checkButton();
+    
   if (millis() - measure_time > MEASURE_PERIOD) { //Measure water level
     digitalWrite(VCCM_PIN, LOW);
     delay(50);
     low_sensor = 1023 - analogRead(LOW_PIN);
     high_sensor = 1023 - analogRead(HIGH_PIN);
     digitalWrite(VCCM_PIN, HIGH);
+
     measure_time = millis();
+
     if (low_sensor > WATER) { //If water higher than low sensor - turn on low LED
       digitalWrite(LED_LOW, HIGH);
     } else {
@@ -88,25 +72,23 @@ void loop()
       digitalWrite(LED_HIGH, HIGH);
     } else {
       digitalWrite(LED_HIGH, LOW);
-
     }
 
-
-    if (!pump && was_high && low_sensor < WATER) { //If pump off and water was high and now water is veri low then turn on the pump
+    if (!is_pump_on && was_high && low_sensor < WATER) { //If pump off and water was high and now water is veri low then turn on the pump
       turnPumpOn();
     }
 
     if (high_sensor > WATER) { //If water upper than high sensor - turn pump off
-      pump = false;
+      is_pump_on = false;
       was_high = true;
       digitalWrite(LED_WASH, HIGH);
       max_motor_time = max_motor_time * 0.95 + (millis() - motor_timer) * 0.11;
 
     }
     if (millis() - motor_timer > max_motor_time * 60 * 1000) { //If timer expired - turn pump off
-      pump = false;
+      is_pump_on = false;
     }
-    if (pump) {                           //turn pump ON and OFF
+    if (is_pump_on) {                           //turn pump LED ON and OFF
       digitalWrite(RELLAY_PIN, HIGH); 
     }
     else {
@@ -124,10 +106,51 @@ void loop()
     Serial.print(',');
     Serial.print(was_high);
     Serial.print(',');
-    Serial.println(pump);
+    Serial.println(is_pump_on);
 */
   }
-  if (pump) { //Blink Motor LED
+  blinkLED();
+
+}
+
+void turnPumpOn() {
+  is_pump_on = true;
+  motor_timer = millis();
+  rl_t = millis();
+  was_high = false;
+  digitalWrite(LED_WASH, LOW);
+  k = 0;
+}
+
+void turnPumpOff() {
+  is_pump_on = true;
+}
+
+void checkButton() {    //Check Button status and do something
+    if (!digitalRead(BTN) && !btn_flag) { //Pressed
+    btn_t = millis();
+    btn_flag = true;
+  }
+  if (digitalRead(BTN) && btn_flag) { //Released
+    if (millis() - btn_t > 50 && millis() - btn_t < 1000) { //Short press
+      was_high = !was_high;
+      digitalWrite(LED_WASH, was_high);
+      btn_flag = false;
+    }
+    else if ((millis() - btn_t) < 2000) { //Long press
+      turnPumpOn();
+      btn_flag = false;
+    }
+    else if ((millis() - btn_t) >= 2000) { //Verry long press
+      btn_flag = false;
+      turnPumpOff();
+    }
+  }
+}
+
+void blinkLED() {
+
+    if (is_pump_on) { //Blink Motor LED
     i = (byte)((max_motor_time * 60 * 1000 - (millis() - motor_timer)) / 60000);
     if (k == 0) {
       if (blink_flag) {
@@ -147,19 +170,8 @@ void loop()
       digitalWrite(LED_RELAY, ledr);
       rl_t = millis();
     }
-
   }
   else {
     digitalWrite(LED_RELAY, LOW);
   }
-
-}
-
-void turnPumpOn() {
-  pump = true;
-  motor_timer = millis();
-  rl_t = millis();
-  was_high = false;
-  digitalWrite(LED_WASH, LOW);
-  k = 0;
 }
